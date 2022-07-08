@@ -5,74 +5,72 @@
 # repository root directory, see https://github.com/koalaman/shellcheck/wiki
 # and https://archiv8.github.io for further information.
 # shellcheck disable=SC2034,SC2154
-# ToDo: Add files: User documentation
-# ToDo: Add files: Tooling
-# FixMe: Namcap warnings and errors
+# [ToDo]: Add files: User documentation
+# [ToDo]: Add files: Tooling
+# [FixMe]: Namcap warnings and errors
 
-# Maintainer: Ross Clark <archiv8@artisteducator.com>
-# Contributor: Ross Clark <archiv8@artisteducator.com>
+# Maintainer: Ross Clark <https://github.com/Archiv8/spirv-cross/discussions>
+# Contributor: Ross Clark <https://github.com/Archiv8/spirv-cross/discussions>
 
+_relname="SPIRV-Cross"
 
-_glslang_commit='3de5cfe50edecd001e6d703555284d9b10b3dd57'
-_spirv_tools_commit='f3ccb633dfd7c5de1f9f0a2d2e9d7a25f2478206'
-_spirv_headers_commit='f027d53ded7e230e008d37c8b47ede7cd308e19d'
+pkgname="spirv-cross"
+pkgver=1.3.216.0
+pkgrel=1
+pkgdesc="A tool and library for parsing and converting SPIR-V to other shader languages"
+arch=(
+  "x86_64"
+  )
+url="https://github.com/KhronosGroup/SPIRV-Cross/"
+license=(
+  "Apache"
+  )
+depends=(
+  "sh"
+  "gcc-libs"
+  "spirv-headers"
+  "spirv-tools"
+  )
+makedepends=(
+  "git" 
+  "cmake" 
+  "python" 
+  "python-nose")
+_tarname="${_relname}-sdk-${pkgver}"
+source=(
+  "${_tarname}.tar.gz"::"https://github.com/KhronosGroup/${_relname}/archive/refs/tags/sdk-${pkgver}.tar.gz"
+)
+sha512sums=(
+  "746bc4560c02d2658b4b9c2ed589e028fcd5708030a751343906076825bda0ae6547aa54c3f0128bbc00198c0c2d5dbc22409eeb0e99bf623696e2771c0cf158"
+)
 
-pkgname=spirv-cross
-pkgver=2021.01.15
-pkgrel=2
-pkgdesc='A tool and library for parsing and converting SPIR-V to other shader languages'
-arch=('x86_64')
-url='https://github.com/KhronosGroup/SPIRV-Cross/'
-license=('Apache')
-depends=('gcc-libs')
-makedepends=('git' 'cmake' 'python' 'python-nose')
-source=("git+https://github.com/KhronosGroup/SPIRV-Cross.git#tag=${pkgver//./-}"
-        "git+https://github.com/KhronosGroup/glslang.git#commit=${_glslang_commit}"
-        "git+https://github.com/KhronosGroup/SPIRV-Tools.git#commit=${_spirv_tools_commit}"
-        "git+https://github.com/KhronosGroup/SPIRV-Headers.git#commit=${_spirv_headers_commit}")
-sha256sums=('SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP')
+# prepare() {
+#     mkdir -p SPIRV-Cross/external/{glslang,spirv-tools}
 
-prepare() {
-    mkdir -p SPIRV-Cross/external/{glslang,spirv-tools}
-
-    ln -sf "${srcdir}/glslang"       SPIRV-Cross/external/glslang
-    ln -sf "${srcdir}/SPIRV-Tools"   SPIRV-Cross/external/spirv-tools
-    ln -sf "${srcdir}/SPIRV-Headers" SPIRV-Tools/external/spirv-headers
-}
+#    ln -sf "${srcdir}/glslang"       SPIRV-Cross/external/glslang
+#     ln -sf "${srcdir}/SPIRV-Tools"   SPIRV-Cross/external/spirv-tools
+#     ln -sf "${srcdir}/SPIRV-Headers" SPIRV-Tools/external/spirv-headers
+# }
 
 build() {
-    # NOTE: test suite fails when using 'None' build type
-    local -a _common_opts=('-DCMAKE_BUILD_TYPE:STRING=Release' '-Wno-dev')
+    # NOTE: test suite fails when using "None" build type
+    local -a _common_opts=("-DCMAKE_BUILD_TYPE:STRING=Release" "-Wno-dev")
 
-    # glslang (required for tests)
-    cmake -B SPIRV-Cross/external/glslang-build -S glslang \
+    cmake -B build-SPIRV-Cross -S ${_tarname} \
         "${_common_opts[@]}" \
-        -DCMAKE_INSTALL_PREFIX:PATH='output'
-    cmake --build SPIRV-Cross/external/glslang-build --target install
+        -DCMAKE_INSTALL_PREFIX:PATH="/usr" \
+        -DSPIRV_CROSS_FORCE_PIC:BOOL="ON" \
+        -DSPIRV_CROSS_SHARED:BOOL="ON"
 
-    # spirv-tools (required for tests)
-    cmake -B SPIRV-Cross/external/spirv-tools-build -S SPIRV-Tools \
-        "${_common_opts[@]}" \
-        -DCMAKE_INSTALL_PREFIX:PATH='output' \
-        -DSPIRV_WERROR:BOOL='OFF'
-    cmake --build SPIRV-Cross/external/spirv-tools-build --target install
-
-    # spirv-cross
-    cmake -B build-SPIRV-Cross -S SPIRV-Cross \
-        "${_common_opts[@]}" \
-        -DCMAKE_INSTALL_PREFIX:PATH='/usr' \
-        -DSPIRV_CROSS_FORCE_PIC:BOOL='ON' \
-        -DSPIRV_CROSS_SHARED:BOOL='ON'
     make -C build-SPIRV-Cross
 }
 
 check() {
+
     make -C build-SPIRV-Cross test
 }
 
 package() {
+
     make -C build-SPIRV-Cross DESTDIR="$pkgdir" install
 }
