@@ -20,22 +20,27 @@ pkgrel=1
 pkgdesc="A tool and library for parsing and converting SPIR-V to other shader languages"
 arch=(
   "x86_64"
-  )
+)
 url="https://github.com/KhronosGroup/SPIRV-Cross/"
 license=(
   "Apache"
-  )
+)
 depends=(
-  "sh"
+  # Official Arch Linux
+  "bash"
   "gcc-libs"
+
+  # Archiv8 / AUR
   "spirv-headers"
   "spirv-tools"
-  )
+)
 makedepends=(
-  "git" 
-  "cmake" 
-  "python" 
-  "python-nose")
+  # Official Arch Linux
+  "git"
+  "cmake"
+  "python"
+  "python-nose"
+  )
 _tarname="${_relname}-sdk-${pkgver}"
 source=(
   "${_tarname}.tar.gz"::"https://github.com/KhronosGroup/${_relname}/archive/refs/tags/sdk-${pkgver}.tar.gz"
@@ -53,24 +58,24 @@ sha512sums=(
 # }
 
 build() {
-    # NOTE: test suite fails when using "None" build type
-    local -a _common_opts=("-DCMAKE_BUILD_TYPE:STRING=Release" "-Wno-dev")
+  # NOTE: test suite fails when using "None" build type
+  local -a _common_opts=("-DCMAKE_BUILD_TYPE:STRING=Release" "-Wno-dev")
 
-    cmake -B build-SPIRV-Cross -S ${_tarname} \
-        "${_common_opts[@]}" \
-        -DCMAKE_INSTALL_PREFIX:PATH="/usr" \
-        -DSPIRV_CROSS_FORCE_PIC:BOOL="ON" \
-        -DSPIRV_CROSS_SHARED:BOOL="ON"
+  cmake -B build-SPIRV-Cross -S ${_tarname} \
+    "${_common_opts[@]}" \
+    -DCMAKE_INSTALL_PREFIX:PATH="/usr" \
+    -DSPIRV_CROSS_FORCE_PIC:BOOL="ON" \
+    -DSPIRV_CROSS_SHARED:BOOL="ON"
 
-    make -C build-SPIRV-Cross
+  make -C build-SPIRV-Cross
 }
 
 check() {
 
-    make -C build-SPIRV-Cross test
+  make -C build-SPIRV-Cross test
 }
 
 package() {
 
-    make -C build-SPIRV-Cross DESTDIR="$pkgdir" install
+  make -C build-SPIRV-Cross DESTDIR="$pkgdir" install
 }
